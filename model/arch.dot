@@ -1,0 +1,29 @@
+digraph hirc{
+	// Entrées/Sorties
+	node [shape=box,style="filled",fillcolor=red];
+	socket;
+	std_out;
+
+	// Données
+	node [shape=box,style="filled",fillcolor=peachpuff];
+	in_messages;
+	in_packets;
+	out_messages;
+	out_packets;
+	printable_line;
+	protocol;
+
+	// Fonctions
+	node [shape=ellipse,style="filled",fillcolor=olivedrab1];
+	process;
+	receive;
+	transmit;
+
+	// Relations
+	out_packets -> socket -> in_packets;
+	printable_line -> std_out;
+	in_messages -> process -> {out_messages printable_line};
+	{protocol in_packets} -> receive -> in_messages;
+	{protocol out_messages} -> transmit -> out_packets;
+
+}
