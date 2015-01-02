@@ -5,13 +5,13 @@ import           System.Exit
 import           System.IO
 import           Text.Printf
 
---| Pour les tests, on va emmerder le monde sur le chan de Teleragno :)
+-- | Pour les tests, on va emmerder le monde sur le chan de Teleragno :)
 server = "irc.teleragno.fr"
 port   = 6667
 chan   = "#bistro"
 nick   = "haskell-bot"
 
---| Fonction principale, se connecte au serveur IRC et lance la boucle d'écoute
+-- | Fonction principale, se connecte au serveur IRC et lance la boucle d'écoute
 main = do
         h <- connectTo server (PortNumber (fromIntegral port))
         hSetBuffering h NoBuffering
@@ -38,17 +38,17 @@ listen h = forever $ do
                ping x    = "PING :" `isPrefixOf` x
                pong x    = write h "PONG" (':' : drop 6 x)
 
---| Fonction qui évalue une commande IRC
+-- | Fonction qui évalue une commande IRC
 eval :: Handle -> String -> IO ()
 eval h    "!quit"                = write h "QUIT" ":Exiting" >> exitSuccess
 eval h x | "!id " `isPrefixOf` x = privmsg h (drop 4 x)
 eval _   _                       = return () -- ignore everything else
 
---| Fonction qui envoie un message sur le chan
+-- | Fonction qui envoie un message sur le chan
 privmsg :: Handle -> String -> IO ()
 privmsg h s = write h "PRIVMSG" (chan ++ " :" ++ s)
 
---| Fonction de base qui envoie au serveur une commande IRC
+-- | Fonction de base qui envoie au serveur une commande IRC
 write :: Handle -> String -> String -> IO ()
 write h s t = do
         hPrintf h "%s %s\r\n" s t
