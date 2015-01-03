@@ -62,7 +62,7 @@ processIrcCommand x
     | ("PRIVMSG " ++ chan) `isInfixOf` x = processUserCommand (clean x)
     | otherwise                          = return ()
         where
-               clean = drop 1 . dropWhile ( /= ':') . drop 1
+               clean = tail . dropWhile ( /= ':') . tail
 
 processUserCommand :: String -> Net ()
 processUserCommand x
