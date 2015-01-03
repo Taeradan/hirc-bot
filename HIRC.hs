@@ -31,9 +31,7 @@ connect = notify $ do
         handle <- connectTo server (PortNumber (fromIntegral port))
         hSetBuffering handle NoBuffering
         return (Bot handle)
-       where notify = bracket_
-                (printf "Connecting to %s ... " server >> hFlush stdout)
-                (putStrLn "done.")
+            where notify = bracket_ (printf "Connecting to %s ... " server >> hFlush stdout) (putStrLn "done.")
 
 -- We're in the Net monad now, so we've connected successfully
 -- Join a channel, and start processing commands
@@ -42,9 +40,10 @@ run = do
         write "NICK" nick
         write "USER" (nick ++ " 0 * :tutorial bot")
         write "JOIN" chan
-        asks socket >>= listen
+        handle <- asks socket
+        listen handle
 
-{-|
+{- |
     Boucle d'écoute du serveur.
     Reçoit les commandes entrantes et décide de quoi en faire.
     Les choix sont :
@@ -74,7 +73,7 @@ privmsg string = write "PRIVMSG" (chan ++ " :" ++ string)
 -- | Fonction de base qui envoie au serveur une commande IRC
 write :: String -> String -> Net ()
 write s t = do
-        handle<- asks socket
+        handle <- asks socket
         io $ hPrintf handle "%s %s\r\n" s t
         io $ printf    "> %s %s\n" s t
 
