@@ -23,7 +23,7 @@ main :: IO ()
 main = bracket connect disconnect loop
     where
         disconnect = hClose . socket
-        loop st    = runReaderT run st
+        loop = runReaderT run
 
 -- Connect to the server and return the initial bot state
 connect :: IO Bot
@@ -31,10 +31,9 @@ connect = notify $ do
         handle <- connectTo server (PortNumber (fromIntegral port))
         hSetBuffering handle NoBuffering
         return (Bot handle)
-       where notify a = bracket_
+       where notify = bracket_
                 (printf "Connecting to %s ... " server >> hFlush stdout)
                 (putStrLn "done.")
-                a
 
 -- We're in the Net monad now, so we've connected successfully
 -- Join a channel, and start processing commands
@@ -64,7 +63,7 @@ listen handle = forever $ do
 
 -- | Fonction qui évalue une commande IRC
 eval :: String -> Net ()
-eval    "!quit"                = write "QUIT" ":Exiting" >> io (exitSuccess)
+eval    "!quit"                = write "QUIT" ":Exiting" >> io exitSuccess
 eval x | "!id " `isPrefixOf` x = privmsg (drop 4 x)
 eval   _                       = return () -- ignore everything else
 
