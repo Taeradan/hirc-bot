@@ -45,26 +45,27 @@ run = do
 
 {- |
     Boucle d'écoute du serveur.
-    Reçoit les commandes entrantes et décide de quoi en faire.
-    Les choix sont :
-    * Répondre à un PING
-    * Lancer le traitement des commandes
+    Reçoit les commandes entrantes et lance le traitement.
 -}
 listen :: Handle -> Net ()
 listen handle = forever $ do
         command <- init `fmap` io (hGetLine handle)
         io (putStrLn command)
-        if ping command then pong command else eval (clean command)
-            where
-               clean     = drop 1 . dropWhile ( /= ':') . drop 1
-               ping x    = "PING :" `isPrefixOf` x
-               pong x    = write "PONG" (':' : drop 6 x)
+        processIrcCommand command
 
 -- | Fonction qui évalue une commande IRC
-eval :: String -> Net ()
-eval    "!quit"                = write "QUIT" ":Exiting" >> io exitSuccess
-eval x | "!id " `isPrefixOf` x = privmsg (drop 4 x)
-eval   _                       = return () -- ignore everything else
+processIrcCommand :: String -> Net ()
+processIrcCommand x
+    | "PING :" `isPrefixOf` x = write "PONG" (':' : drop 6 x)
+    | otherwise               = processUserCommand (clean x)
+        where
+               clean = drop 1 . dropWhile ( /= ':') . drop 1
+
+processUserCommand :: String -> Net ()
+processUserCommand x
+    | x == "!quit"          = write "QUIT" ":Exiting" >> io exitSuccess
+    | "!id " `isPrefixOf` x = privmsg (drop 4 x)
+    | otherwise             = return () -- ignore everything else
 
 -- | Fonction qui envoie un message sur le chan
 privmsg :: String -> Net ()
