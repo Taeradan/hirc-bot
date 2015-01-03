@@ -1,7 +1,7 @@
 import           Control.Arrow
+import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Reader
-import           Control.Exception
 import           Data.List
 import           Network
 import           System.Exit
@@ -58,8 +58,9 @@ listen handle = forever $ do
 -- | Fonction qui évalue une commande IRC
 processIrcCommand :: String -> Net ()
 processIrcCommand x
-    | "PING :" `isPrefixOf` x = write "PONG" (':' : drop 6 x)
-    | otherwise               = processUserCommand (clean x)
+    | "PING :" `isPrefixOf` x            = write "PONG" (':' : drop 6 x)
+    | ("PRIVMSG " ++ chan) `isInfixOf` x = processUserCommand (clean x)
+    | otherwise                          = return ()
         where
                clean = drop 1 . dropWhile ( /= ':') . drop 1
 
