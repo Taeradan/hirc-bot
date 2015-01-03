@@ -68,6 +68,7 @@ processUserCommand :: String -> Net ()
 processUserCommand x
     | x == "!quit"          = write "QUIT" ":Exiting" >> io exitSuccess
     | "!id " `isPrefixOf` x = privmsg (drop 4 x)
+    | "coin" `isInfixOf` x  = privmsg "PAN !"
     | otherwise             = return () -- ignore everything else
 
 -- | Fonction qui envoie un message sur le chan
