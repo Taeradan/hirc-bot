@@ -12,6 +12,7 @@ chan   = "#bistro"
 nick   = "haskell-bot"
 
 -- | Fonction principale, se connecte au serveur IRC et lance la boucle d'écoute
+main :: IO ()
 main = do
         h <- connectTo server (PortNumber (fromIntegral port))
         hSetBuffering h NoBuffering
