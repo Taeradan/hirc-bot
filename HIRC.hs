@@ -31,7 +31,9 @@ connect = notify $ do
         handle <- connectTo server (PortNumber (fromIntegral port))
         hSetBuffering handle NoBuffering
         return (Bot handle)
-            where notify = bracket_ (printf "Connecting to %s ... " server >> hFlush stdout) (putStrLn "done.")
+            where notify = bracket_ pre post
+                  pre    = printf "Connecting to %s ... " server >> hFlush stdout
+                  post   = putStrLn "done."
 
 -- We're in the Net monad now, so we've connected successfully
 -- Join a channel, and start processing commands
