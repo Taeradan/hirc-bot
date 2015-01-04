@@ -3,6 +3,7 @@ import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Reader
 import           Data.List
+import           Data.Char
 import           Network
 import           System.Exit
 import           System.IO
@@ -66,10 +67,10 @@ processIrcCommand x
 
 processUserCommand :: String -> Net ()
 processUserCommand x
-    | x == "!quit"          = write "QUIT" ":Exiting" >> io exitSuccess
-    | "!id " `isPrefixOf` x = privmsg (drop 4 x)
-    | "coin" `isInfixOf` x  = privmsg "PAN !"
-    | otherwise             = return () -- ignore everything else
+    | x == "!quit"                       = write "QUIT" ":Exiting" >> io exitSuccess
+    | "!id " `isPrefixOf` x              = privmsg (drop 4 x)
+    | "coin" `isInfixOf` (map toLower x) = privmsg "PAN !"
+    | otherwise                          = return () -- ignore everything else
 
 -- | Fonction qui envoie un message sur le chan
 privmsg :: String -> Net ()
