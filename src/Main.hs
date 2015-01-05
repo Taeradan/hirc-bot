@@ -15,7 +15,7 @@ port   = 6667
 chan   = "#bistro"
 nick   = "haskell-bot"
 
--- The 'Net' monad, a wrapper over IO, carrying the bot's immutable state.
+-- | The 'Net' monad, a wrapper over IO, carrying the bot's immutable state.
 type Net = ReaderT Bot IO
 data Bot = Bot { socket :: Handle }
 
@@ -26,7 +26,7 @@ main = bracket connect disconnect loop
         disconnect = hClose . socket
         loop = runReaderT run
 
--- Connect to the server and return the initial bot state
+-- | Connect to the server and return the initial bot state
 connect :: IO Bot
 connect = notify $ do
         handle <- connectTo server (PortNumber (fromIntegral port))
@@ -36,8 +36,8 @@ connect = notify $ do
                   pre    = printf "Connecting to %s ... " server >> hFlush stdout
                   post   = putStrLn "done."
 
--- We're in the Net monad now, so we've connected successfully
--- Join a channel, and start processing commands
+-- | We're in the Net monad now, so we've connected successfully
+--   Join a channel, and start processing commands
 run :: Net ()
 run = do
         write "NICK" nick
@@ -46,10 +46,8 @@ run = do
         handle <- asks socket
         listen handle
 
-{- |
-    Boucle d'écoute du serveur.
-    Reçoit les commandes entrantes et lance le traitement.
--}
+-- | Boucle d'écoute du serveur.
+--   Reçoit les commandes entrantes et lance le traitement.
 listen :: Handle -> Net ()
 listen handle = forever $ do
         command <- init `fmap` io (hGetLine handle)
@@ -65,6 +63,7 @@ processIrcCommand x
         where
                clean = tail . dropWhile ( /= ':') . tail
 
+-- | Fonction qui évalue une commande d'un utilisateur
 processUserCommand :: String -> Net ()
 processUserCommand x
     | x == "!quit"                       = write "QUIT" ":Exiting" >> io exitSuccess
