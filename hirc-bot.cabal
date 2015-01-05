@@ -1,0 +1,23 @@
+name:                hirc-bot
+version:             0.1.0.0
+synopsis:            Tiny (for now) Haskell IRC bot.
+-- description:         
+homepage:            https://github.com/Taeradan/hirc-bot
+license:             GPL-3
+license-file:        LICENSE
+author:              Yves Dubromelle
+maintainer:          taeradan@dubronetwork.fr
+-- copyright:           
+category:            Network
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+executable hirc-bot
+  main-is:             Main.hs
+  -- other-modules:       
+  -- other-extensions:    
+  build-depends:       base >=4.7 && <4.8, mtl >=2.2 && <2.3, network >=2.6 && <2.7
+  hs-source-dirs:     src
+  default-language:    Haskell2010
+  
