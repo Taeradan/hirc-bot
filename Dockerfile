@@ -3,8 +3,12 @@ FROM haskell
 RUN cabal update
 RUN cabal install mtl
 RUN cabal install network
+RUN cabal install irc
 
-ADD HIRC.hs /
-RUN ghc /HIRC.hs
+ADD . /
+WORKDIR /
+RUN cabal configure
+RUN cabal build
+RUN cabal install
 
-ENTRYPOINT /HIRC
+ENTRYPOINT /root/.cabal/bin/hirc-bot
