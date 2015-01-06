@@ -2,9 +2,13 @@ import           Control.Arrow
 import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Reader
+import qualified Data.ByteString.Char8 as B
 import           Data.List
 import           Data.Char
 import           Network
+import           Network.IRC.Base
+import           Network.IRC.Commands
+import           Network.IRC.Parser
 import           System.Exit
 import           System.IO
 import           Text.Printf
@@ -13,7 +17,7 @@ import           Text.Printf
 server = "irc.teleragno.fr"
 port   = 6667
 chan   = "#bistro"
-nick   = "haskell-bot"
+nickname   = "haskell-bot"
 
 -- | The 'Net' monad, a wrapper over IO, carrying the bot's immutable state.
 type Net = ReaderT Bot IO
@@ -40,9 +44,9 @@ connect = notify $ do
 --   Join a channel, and start processing commands
 run :: Net ()
 run = do
-        write "NICK" nick
-        write "USER" (nick ++ " 0 * :tutorial bot")
-        write "JOIN" chan
+        write' $ nick . B.pack $ nickname
+        write "USER" (nickname ++ " 0 * :tutorial bot")
+        write' $ joinChan . B.pack $ chan
         handle <- asks socket
         listen handle
 
@@ -57,7 +61,7 @@ listen handle = forever $ do
 -- | Fonction qui évalue une commande IRC
 processIrcCommand :: String -> Net ()
 processIrcCommand x
-    | "PING :" `isPrefixOf` x            = write "PONG" (':' : drop 6 x)
+    | "PING :" `isPrefixOf` x            = write' $ pong . B.pack $ server
     | ("PRIVMSG " ++ chan) `isInfixOf` x = processUserCommand (clean x)
     | otherwise                          = return ()
         where
@@ -67,13 +71,13 @@ processIrcCommand x
 processUserCommand :: String -> Net ()
 processUserCommand x
     | x == "!quit"                       = write "QUIT" ":Exiting" >> io exitSuccess
-    | "!id " `isPrefixOf` x              = privmsg (drop 4 x)
-    | "coin" `isInfixOf` (map toLower x) = privmsg "PAN !"
+    | "!id " `isPrefixOf` x              = privateMessage (drop 4 x)
+    | "coin" `isInfixOf` (map toLower x) = privateMessage "PAN !"
     | otherwise                          = return () -- ignore everything else
 
 -- | Fonction qui envoie un message sur le chan
-privmsg :: String -> Net ()
-privmsg string = write "PRIVMSG" (chan ++ " :" ++ string)
+privateMessage :: String -> Net ()
+privateMessage string = write "PRIVMSG" (chan ++ " :" ++ string)
 
 -- | Fonction de base qui envoie au serveur une commande IRC
 write :: String -> String -> Net ()
@@ -81,6 +85,13 @@ write s t = do
         handle <- asks socket
         io $ hPrintf handle "%s %s\r\n" s t
         io $ printf    "> %s %s\n" s t
+
+write' :: Message -> Net()
+write' message = do
+        handle <- asks socket
+        let string = B.unpack . encode $ message
+        io $ hPutStrLn handle string
+        io $ putStrLn string
 
 -- Convenience.
 io :: IO a -> Net a
