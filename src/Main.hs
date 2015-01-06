@@ -3,8 +3,8 @@ import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Reader
 import qualified Data.ByteString.Char8 as B
-import           Data.List
 import           Data.Char
+import           Data.List
 import           Network
 import           Network.IRC.Base
 import           Network.IRC.Commands
@@ -44,9 +44,9 @@ connect = notify $ do
 --   Join a channel, and start processing commands
 run :: Net ()
 run = do
-        write' $ nick . B.pack $ nickname
-        write "USER" (nickname ++ " 0 * :tutorial bot")
-        write' $ joinChan . B.pack $ chan
+        write $ nick . B.pack $ nickname
+        write $ user (B.pack nickname) (B.pack "0") (B.pack "*") (B.pack "Haskell IRC Bot")
+        write $ joinChan . B.pack $ chan
         handle <- asks socket
         listen handle
 
@@ -61,7 +61,7 @@ listen handle = forever $ do
 -- | Fonction qui évalue une commande IRC
 processIrcCommand :: String -> Net ()
 processIrcCommand x
-    | "PING :" `isPrefixOf` x            = write' $ pong . B.pack $ server
+    | "PING :" `isPrefixOf` x            = write $ pong . B.pack $ server
     | ("PRIVMSG " ++ chan) `isInfixOf` x = processUserCommand (clean x)
     | otherwise                          = return ()
         where
@@ -70,22 +70,15 @@ processIrcCommand x
 -- | Fonction qui évalue une commande d'un utilisateur
 processUserCommand :: String -> Net ()
 processUserCommand x
-    | x == "!quit"                       = do
-                                            write' $ quit . Just . B.pack $ "Exiting"
+    | x == "!quit"                     = do
+                                            write $ quit . Just . B.pack $ "Exiting"
                                             io exitSuccess
-    | "!id " `isPrefixOf` x              = write' $ privmsg (B.pack chan) (B.pack (drop 4 x))
-    | "coin" `isInfixOf` (map toLower x) = write' $ privmsg (B.pack chan) (B.pack "PAN !")
+    | "!id " `isPrefixOf` x            = write $ privmsg (B.pack chan) (B.pack (drop 4 x))
+    | "coin" `isInfixOf` map toLower x = write $ privmsg (B.pack chan) (B.pack "PAN !")
     | otherwise                          = return () -- ignore everything else
 
--- | Fonction de base qui envoie au serveur une commande IRC
-write :: String -> String -> Net ()
-write s t = do
-        handle <- asks socket
-        io $ hPrintf handle "%s %s\r\n" s t
-        io $ printf    "> %s %s\n" s t
-
-write' :: Message -> Net()
-write' message = do
+write :: Message -> Net()
+write message = do
         handle <- asks socket
         let string = B.unpack . encode $ message
         io $ hPutStrLn handle string
