@@ -70,14 +70,12 @@ processIrcCommand x
 -- | Fonction qui évalue une commande d'un utilisateur
 processUserCommand :: String -> Net ()
 processUserCommand x
-    | x == "!quit"                       = write "QUIT" ":Exiting" >> io exitSuccess
-    | "!id " `isPrefixOf` x              = privateMessage (drop 4 x)
-    | "coin" `isInfixOf` (map toLower x) = privateMessage "PAN !"
+    | x == "!quit"                       = do
+                                            write' $ quit . Just . B.pack $ "Exiting"
+                                            io exitSuccess
+    | "!id " `isPrefixOf` x              = write' $ privmsg (B.pack chan) (B.pack (drop 4 x))
+    | "coin" `isInfixOf` (map toLower x) = write' $ privmsg (B.pack chan) (B.pack "PAN !")
     | otherwise                          = return () -- ignore everything else
-
--- | Fonction qui envoie un message sur le chan
-privateMessage :: String -> Net ()
-privateMessage string = write "PRIVMSG" (chan ++ " :" ++ string)
 
 -- | Fonction de base qui envoie au serveur une commande IRC
 write :: String -> String -> Net ()
