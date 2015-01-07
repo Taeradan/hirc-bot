@@ -56,26 +56,25 @@ listen :: Handle -> Net ()
 listen handle = forever $ do
         command <- init `fmap` io (hGetLine handle)
         io (putStrLn command)
-        processIrcCommand command
+        let message = processIrcCommand command
+        maybe (return ()) write message
 
 -- | Fonction qui évalue une commande IRC
-processIrcCommand :: String -> Net ()
+processIrcCommand :: String -> Maybe Message
 processIrcCommand x
-    | "PING :" `isPrefixOf` x            = write $ pong . B.pack $ server
+    | "PING :" `isPrefixOf` x            = Just $ pong . B.pack $ server
     | ("PRIVMSG " ++ chan) `isInfixOf` x = processUserCommand (clean x)
-    | otherwise                          = return ()
+    | otherwise                          = Nothing
         where
                clean = tail . dropWhile ( /= ':') . tail
 
 -- | Fonction qui évalue une commande d'un utilisateur
-processUserCommand :: String -> Net ()
+processUserCommand :: String -> Maybe Message
 processUserCommand x
-    | x == "!quit"                     = do
-                                            write $ quit . Just . B.pack $ "Exiting"
-                                            io exitSuccess
-    | "!id " `isPrefixOf` x            = write $ privmsg (B.pack chan) (B.pack (drop 4 x))
-    | "coin" `isInfixOf` map toLower x = write $ privmsg (B.pack chan) (B.pack "PAN !")
-    | otherwise                          = return () -- ignore everything else
+    | x == "!quit"                     = Just $ quit . Just . B.pack $ "Exiting"
+    | "!id " `isPrefixOf` x            = Just $ privmsg (B.pack chan) (B.pack (drop 4 x))
+    | "coin" `isInfixOf` map toLower x = Just $ privmsg (B.pack chan) (B.pack "PAN !")
+    | otherwise                        = Nothing
 
 write :: Message -> Net()
 write message = do
