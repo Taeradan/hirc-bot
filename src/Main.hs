@@ -7,6 +7,7 @@ import           Control.Monad.Reader
 import qualified Data.ByteString.Char8 as B
 import           Data.Char
 import           Data.List
+import           HIRC.Parser
 import           Network
 import           Network.IRC.Base
 import           Network.IRC.Commands
