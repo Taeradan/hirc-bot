@@ -21,3 +21,5 @@ cabal.config
 *.prof
 *.aux
 *.hp
+
+/SourceGraph
